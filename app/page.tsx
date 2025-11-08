@@ -1,7 +1,10 @@
+import Globe from "./components/globe";
+
 export default function Home() {
+  console.log("Token check:", process.env.NEXT_PUBLIC_CESIUM_TOKEN);
   return (
     //Entire page
-    <div className="h-screen">
+    <div className="h-screen text-[1vw]">
       {/*dashboard*/}
       <div className = "w-full h-1/8 bg-slate-400">dashboard</div>
       <div className = "flex w-full h-6/8 items-center">
@@ -15,7 +18,7 @@ export default function Home() {
         </div>
         {/* Right globe box */}
         <div className = "w-5/8 h-full bg-gray-500">
-          globe
+          <Globe />
         </div>
       </div>
       <div className = "w-full h-1/8 bg-slate-400">Footer</div>
