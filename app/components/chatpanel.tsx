@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useState, useRef, useEffect} from "react";
 
 type Message = {
     role: "user" | "assistant";
@@ -11,6 +11,7 @@ export default function chatpanel(){
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
     async function handleSend(){
         if(!input.trim() || isLoading) return;
@@ -44,9 +45,35 @@ export default function chatpanel(){
 
     }
 
+    useEffect(() => {
+        if(!chatContainerRef.current) return;
+        const element = chatContainerRef.current;
+        element.scrollTo({
+            top: element.scrollHeight,
+            behavior: "smooth"  
+        });
+    }, [messages]);
+
     return (
         <div className = "flex flex-col w-full gap-1 h-full p-2 bg-black rounded-lg justify-between">
-            <div className = "flex-1 p-3 overflow-y-auto bg-linear-to-b rounded-xl from-[#1e2124] to-[#243848]">AI agent chat area</div>
+            {/* Chat area */}
+            <div 
+            ref = {chatContainerRef}
+            className = "flex-1 p-3 overflow-y-auto custom-scrollbar bg-linear-to-b rounded-xl from-[#1e2124] to-[#243848]">
+                {messages.map((msg, index) => (
+                    <div 
+                    key={index}
+                    className = {`my-2 p-2 rounded-lg max-w-[80%] ${
+                        msg.role === 'user' 
+                        ? 'bg-blue-900 text-white self-end ml-auto'
+                        : 'bg-[#70c573] text-white self-start mr-auto'
+                        }`}
+                    >
+                        {msg.content}
+                    </div>
+                ))}
+            </div>
+            {/* Input area */}
             <div className = "flex items-center bg-gray-800 p-2 rounded-xl">
               <textarea 
               value = {input}
