@@ -66,14 +66,73 @@ ${chatHistory}
         console.log("Cleaned reply that caused error:", cleanedReply);
         return NextResponse.json({reply});
     }
- 
+
     const trip = jsonData;
 
     const origin = trip.origin?.trim();
     const destination = trip.destination?.trim();
     const budget_usd = Number(String(trip.budget_usd).replace(/[^0-9.]/g, ""));
     const duration_days = Number(trip.duration_days);
+
+    const amadeusKey = process.env.AMADEUS_API_KEY;
+    const amadeusSecret = process.env.AMADEUS_API_SECRET;
     
+    if (!amadeusKey || !amadeusSecret) {
+        console.error("Missing Amadeus API credentials in environment variables.");
+        return NextResponse.json({
+            reply: "Server configuration error — missing Amadeus API credentials.",
+        });
+    }
+    
+    let amadeusToken = "";
+    try{
+        const authRes = await fetch("https://test.api.amadeus.com/v1/security/oauth2/token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                grant_type: "client_credentials",
+                client_id: amadeusKey,
+                client_secret: amadeusSecret,
+            }),
+        });
+        const authData = await authRes.json();
+        amadeusToken = authData.access_token;
+        console.log("Obtained Amadeus token:");
+    }catch (err){
+        console.error("Error fetching Amadeus token:", err);
+        return NextResponse.json({
+            reply: "I couldn't authenticate with the travel service. Please try again later.",
+        });
+    }
+     
+    let flightInfo: any = null;
+    try {
+    const flightRes = await fetch(
+        `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination.slice(0,3).toUpperCase()}&departureDate=${trip.start_date}&adults=1&currencyCode=USD&max=1`,
+        { headers: { Authorization: `Bearer ${amadeusToken}` } }
+    );
+
+    if (flightRes.ok) {
+        const flightData = await flightRes.json();
+        if (flightData.data && flightData.data.length > 0) {
+        const offer = flightData.data[0];
+        flightInfo = {
+            airline: offer.validatingAirlineCodes?.[0] || "Unknown",
+            price: offer.price?.total || "N/A",
+            currency: offer.price?.currency || "USD",
+            departure: offer.itineraries?.[0]?.segments?.[0]?.departure?.iataCode,
+            arrival: offer.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode,
+        };
+        }
+    } else {
+        console.error("Flight API error:", await flightRes.text());
+    }
+    } catch (err) {
+    console.error("Error fetching flight data:", err);
+    }
+
     
     const geoKey = process.env.GEOAPIFY_API_KEY;
     if (!geoKey) {
@@ -125,6 +184,32 @@ ${chatHistory}
     const lat = coords[1];
     console.log(`Coordinates for ${destination}: lat=${lat}, lon=${lon}`);
 
+    
+    let hotelInfo: any = null;
+    try {
+    const hotelRes = await fetch(
+        `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-geocode?latitude=${lat}&longitude=${lon}&radius=5`,
+        { headers: { Authorization: `Bearer ${amadeusToken}` } }
+    );
+
+    if (hotelRes.ok) {
+        const hotelData = await hotelRes.json();
+        if (hotelData.data && hotelData.data.length > 0) {
+        const h = hotelData.data[0];
+        hotelInfo = {
+            name: h.name,
+            lat: h.geoCode?.latitude,
+            lon: h.geoCode?.longitude,
+            address: h.address?.lines?.join(", ") || "",
+            city: h.address?.cityName || destination,
+        };
+        }
+    } else {
+        console.error("Hotel API error:", await hotelRes.text());
+    }
+    } catch (err) {
+    console.error("Error fetching hotel data:", err);
+    }
 
     const prefMap: Record<string, string> = {
         museum: "tourism.museum",
@@ -159,7 +244,6 @@ ${chatHistory}
 
     console.log("found activities: ", activities);
 
-        // --- Optional Gemini enrichment: generate short tourist descriptions ---
     try {
     const placesList = activities.map((a) => a.name).join(", ");
 
@@ -185,7 +269,7 @@ ${chatHistory}
     .replace(/```$/, "")
     .trim();
     
-    // try to parse Gemini output safely
+    
     let descJSON: any = {};
     try {
         descJSON = JSON.parse(cleanedDesc);
@@ -204,7 +288,13 @@ ${chatHistory}
     }
 
 
-    return NextResponse.json({reply: `Here are some suggested activities in ${destination}:`,
-        activities
-    });
+    return NextResponse.json({
+        reply: `Here’s your trip plan to ${destination}!`,
+        flight: flightInfo,
+        hotel: hotelInfo,
+        activities,
+        mapCenter: hotelInfo
+            ? { lat: hotelInfo.lat, lon: hotelInfo.lon }
+            : { lat, lon },
+        });
 }
