@@ -36,6 +36,17 @@ export default function chatpanel(){
             const data = await response.json();
 
             let assistantMessage: Message = {role: "assistant", content: data.reply};
+            
+            if (data.flight) {
+                const f = data.flight;
+                assistantMessage.content += `\n\nFlight Info:\n${f.airline || "Unknown Airline"} — ${f.departure || "?"} → ${f.arrival || "?"}`;
+            }
+
+            
+            if (data.hotel) {
+                const h = data.hotel;
+                assistantMessage.content += `\n\nHotel:\n${h.name || "Unnamed Hotel"}\n${h.address || ""}`;
+            }
 
             if (data.activities && Array.isArray(data.activities) && data.activities.length > 0) {
                 const activitiesText = data.activities

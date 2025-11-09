@@ -109,29 +109,55 @@ ${chatHistory}
      
     let flightInfo: any = null;
     try {
-    const flightRes = await fetch(
-        `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination.slice(0,3).toUpperCase()}&departureDate=${trip.start_date}&adults=1&currencyCode=USD&max=1`,
-        { headers: { Authorization: `Bearer ${amadeusToken}` } }
-    );
+        let destCode = "";
+        const locRes = await fetch(
+            `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY,AIRPORT&keyword=${encodeURIComponent(destination)}&page[limit]=1`,
+            { headers: { Authorization: `Bearer ${amadeusToken}` } }
+        );
+        const locData = await locRes.json();
+        console.log("Amadeus location data:", JSON.stringify(locData, null, 2));
+        destCode = locData.data?.[0]?.iataCode || "";
 
-    if (flightRes.ok) {
-        const flightData = await flightRes.json();
-        if (flightData.data && flightData.data.length > 0) {
-        const offer = flightData.data[0];
-        flightInfo = {
-            airline: offer.validatingAirlineCodes?.[0] || "Unknown",
-            price: offer.price?.total || "N/A",
-            currency: offer.price?.currency || "USD",
-            departure: offer.itineraries?.[0]?.segments?.[0]?.departure?.iataCode,
-            arrival: offer.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode,
-        };
+        if (!destCode) {
+            const fallbackMap: Record<string, string> = {
+                tokyo: "TYO",
+                london: "LON",
+                paris: "PAR",
+                newyork: "NYC",
+                losangeles: "LAX",
+                miami: "MIA",
+                dubai: "DXB",
+                singapore: "SIN",
+                hongkong: "HKG"
+            };
+            destCode = fallbackMap[destination.toLowerCase()] || "";
+            console.log("Using fallback IATA code:", destCode);
         }
-    } else {
-        console.error("Flight API error:", await flightRes.text());
-    }
+
+        const flightRes = await fetch(
+            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destCode}&departureDate=${trip.start_date}&adults=1&currencyCode=USD&max=1`,
+            { headers: { Authorization: `Bearer ${amadeusToken}` } }
+        );
+
+        const flightData = await flightRes.json();
+        console.log("Amadeus flight response:", JSON.stringify(flightData, null, 2));
+
+        if (flightData.data && flightData.data.length > 0) {
+            const offer = flightData.data[0];
+            flightInfo = {
+                airline: offer.validatingAirlineCodes?.[0] || "Unknown",
+                price: offer.price?.total || "N/A",
+                currency: offer.price?.currency || "USD",
+                departure: offer.itineraries?.[0]?.segments?.[0]?.departure?.iataCode,
+                arrival: offer.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode,
+            };
+        } else {
+            console.warn("No flight data found for", origin, destCode, trip.start_date);
+        }
     } catch (err) {
-    console.error("Error fetching flight data:", err);
+        console.error("Error fetching flight data:", err);
     }
+
 
     
     const geoKey = process.env.GEOAPIFY_API_KEY;
@@ -245,7 +271,7 @@ ${chatHistory}
     console.log("found activities: ", activities);
 
     try {
-    const placesList = activities.map((a) => a.name).join(", ");
+    const placesList = activities.map((a : any) => a.name).join(", ");
 
     const descriptionPrompt = `
     Write a one-sentence, friendly tourist description for each of these attractions in ${destination}.
@@ -279,7 +305,7 @@ ${chatHistory}
 
     if (descJSON.descriptions) {
         for (const d of descJSON.descriptions) {
-        const found = activities.find((a) => a.name === d.name);
+        const found = activities.find((a : any) => a.name === d.name);
         if (found) found.description = d.desc;
         }
     }
@@ -289,7 +315,7 @@ ${chatHistory}
 
 
     return NextResponse.json({
-        reply: `Here’s your trip plan to ${destination}!`,
+        reply: `Here's your trip plan to ${destination}, optimized for your $${budget_usd} budget!`,
         flight: flightInfo,
         hotel: hotelInfo,
         activities,
