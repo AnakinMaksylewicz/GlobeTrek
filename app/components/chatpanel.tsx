@@ -19,16 +19,18 @@ export default function chatpanel(){
         console.log("Sending message:", input);
 
         const userMessage: Message = {role: "user", content: input};
+        const newMessages = [...messages, userMessage];
 
-        setMessages((prev) => [...prev, userMessage]);
+        setMessages(newMessages);
         setInput("");
         setIsLoading(true);
 
         try{
+            console.log("Sending messages to API:", newMessages);
             const response = await fetch("/api/plan", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message: input}),
+                body: JSON.stringify({messages: newMessages}),
             });
 
             const data = await response.json();
