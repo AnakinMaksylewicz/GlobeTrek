@@ -111,7 +111,7 @@ ${chatHistory}
     try {
         let destCode = "";
         const locRes = await fetch(
-            `https://test.api.amadeus.com/v1/reference-data/locations?subType=CITY,AIRPORT&keyword=${encodeURIComponent(destination)}&page[limit]=1`,
+            `https://test.api.amadeus.com/v1/reference-data/locations/cities?keyword=${encodeURIComponent(destination)}&page[limit]=1`,
             { headers: { Authorization: `Bearer ${amadeusToken}` } }
         );
         const locData = await locRes.json();
@@ -119,24 +119,36 @@ ${chatHistory}
         destCode = locData.data?.[0]?.iataCode || "";
 
         if (!destCode) {
-            const fallbackMap: Record<string, string> = {
-                tokyo: "TYO",
-                london: "LON",
-                paris: "PAR",
-                newyork: "NYC",
-                losangeles: "LAX",
-                miami: "MIA",
-                dubai: "DXB",
-                singapore: "SIN",
-                hongkong: "HKG"
-            };
-            destCode = fallbackMap[destination.toLowerCase()] || "";
-            console.log("Using fallback IATA code:", destCode);
-        }
+        const fallbackMap: Record<string, string> = {
+            tokyo: "TYO", osaka: "OSA", kyoto: "UKY",
+            london: "LON", paris: "PAR", rome: "ROM",
+            madrid: "MAD", barcelona: "BCN", berlin: "BER",
+            amsterdam: "AMS", brussels: "BRU", zurich: "ZRH",
+            vienna: "VIE", prague: "PRG", budapest: "BUD",
+            dubai: "DXB", singapore: "SIN", hongkong: "HKG",
+            bangkok: "BKK", seoul: "SEL", beijing: "BJS",
+            shanghai: "SHA", sydney: "SYD", melbourne: "MEL",
+            auckland: "AKL", toronto: "YTO", vancouver: "YVR",
+            montreal: "YMQ", newyork: "NYC", losangeles: "LAX",
+            sanfrancisco: "SFO", chicago: "CHI", miami: "MIA",
+            houston: "HOU", dallas: "DFW", orlando: "ORL",
+            lasvegas: "LAS", boston: "BOS", seattle: "SEA",
+            washington: "WAS", atlanta: "ATL", mexico: "MEX",
+            cancun: "CUN", lima: "LIM", buenosaires: "BUE",
+            santiago: "SCL", saoPaulo: "SAO", rio: "RIO",
+            johannesburg: "JNB", cairo: "CAI", nairobi: "NBO",
+            istanbul: "IST", delhi: "DEL", mumbai: "BOM",
+            bangalore: "BLR", kolkata: "CCU", karachi: "KHI",
+            islamabad: "ISB", doha: "DOH", tehran: "THR",
+            jerusalem: "TLV", riyadh: "RUH"
+        };
+        destCode = fallbackMap[destination.replace(/\s+/g, "").toLowerCase()] || "";
+        console.log("Using fallback IATA code:", destCode);
+    }
 
-        const flightRes = await fetch(
-            `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destCode}&departureDate=${trip.start_date}&adults=1&currencyCode=USD&max=1`,
-            { headers: { Authorization: `Bearer ${amadeusToken}` } }
+    const flightRes = await fetch(
+        `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destCode}&departureDate=${trip.start_date}&adults=1&currencyCode=USD&max=1`,
+        { headers: { Authorization: `Bearer ${amadeusToken}` } }
         );
 
         const flightData = await flightRes.json();
