@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {GoogleGenerativeAI} from "@google/generative-ai";
 
+console.log("GEOAPIFY_API_KEY loaded:", !!process.env.GEOAPIFY_API_KEY);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 type Message = {
     role: "user" | "assistant";
@@ -151,11 +152,57 @@ ${chatHistory}
     const activities = placesData.features.map((feature: any) => ({
         name: feature.properties.name,
         address: feature.properties.address_line1 || feature.properties.address_line2 || "",
+        description: feature.properties.wikipedia_extracts?.text || feature.properties.formatted || feature.properties.details || "No description available.",
         lat: feature.geometry.coordinates[1],
         lon: feature.geometry.coordinates[0],
     })) || [];
 
     console.log("found activities: ", activities);
+
+        // --- Optional Gemini enrichment: generate short tourist descriptions ---
+    try {
+    const placesList = activities.map((a) => a.name).join(", ");
+
+    const descriptionPrompt = `
+    Write a one-sentence, friendly tourist description for each of these attractions in ${destination}.
+    Respond ONLY in JSON in this format:
+    {
+        "descriptions": [
+        {"name": "雷門", "desc": "A historic gate marking the entrance to Asakusa's Senso-ji Temple."},
+        {"name": "東京スカイツリー", "desc": "Japan's tallest tower offering panoramic views of Tokyo."}
+        ]
+    }
+
+    Attractions: ${placesList}
+    `;
+
+    const descResult = await model.generateContent(descriptionPrompt);
+    const descText = descResult.response.text().trim();
+
+    let cleanedDesc = descText
+    .replace(/^```json\s*/i, "")
+    .replace(/^```/, "")
+    .replace(/```$/, "")
+    .trim();
+    
+    // try to parse Gemini output safely
+    let descJSON: any = {};
+    try {
+        descJSON = JSON.parse(cleanedDesc);
+    } catch (err) {
+        console.error("Failed to parse Gemini description JSON:", err, cleanedDesc);
+    }
+
+    if (descJSON.descriptions) {
+        for (const d of descJSON.descriptions) {
+        const found = activities.find((a) => a.name === d.name);
+        if (found) found.description = d.desc;
+        }
+    }
+    } catch (err) {
+    console.error("Gemini description enrichment failed:", err);
+    }
+
 
     return NextResponse.json({reply: `Here are some suggested activities in ${destination}:`,
         activities

@@ -35,7 +35,19 @@ export default function chatpanel(){
 
             const data = await response.json();
 
-            const assistantMessage: Message = {role: "assistant", content: data.reply};
+            let assistantMessage: Message = {role: "assistant", content: data.reply};
+
+            if (data.activities && Array.isArray(data.activities) && data.activities.length > 0) {
+                const activitiesText = data.activities
+                    .map(
+                        (a: any, i: number) =>
+                        `${i + 1}. ${a.name}${a.description ? ` – ${a.description}` : a.address ? ` – ${a.address}` : ""}`
+                    )
+                    .join("\n\n");
+
+                assistantMessage.content += `\n\n${activitiesText}`;
+            }
+
             setMessages((prev) => [...prev, assistantMessage]);
         }
         catch (error) {
@@ -65,7 +77,7 @@ export default function chatpanel(){
                 {messages.map((msg, index) => (
                     <div 
                     key={index}
-                    className = {`my-2 p-2 rounded-lg max-w-[80%] ${
+                    className = {`my-2 p-2 whitespace-pre-wrap rounded-lg max-w-[80%] ${
                         msg.role === 'user' 
                         ? 'bg-blue-900 text-white self-end ml-auto'
                         : 'bg-[#70c573] text-white self-start mr-auto'
