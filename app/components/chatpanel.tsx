@@ -13,6 +13,8 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
     const [isLoading, setIsLoading] = useState(false);
     const chatContainerRef = useRef<HTMLDivElement | null>(null);
     const [audioSrc, setAudioSrc] = useState<string | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     async function handleSend(){
         if(!input.trim() || isLoading) return;
@@ -98,8 +100,20 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
                 {audioSrc && (
                     <button
                         onClick={() => {
-                            const audio = new Audio(audioSrc);
-                            audio.play();
+                            if (isPlaying && audioRef.current) {
+                                audioRef.current.pause();
+                                audioRef.current.currentTime = 0;
+                                setIsPlaying(false);
+                            } else {
+                                if (audioRef.current) {
+                                    audioRef.current.pause();
+                                }
+                                const audio = new Audio(audioSrc);
+                                audioRef.current = audio;
+                                audio.play();
+                                setIsPlaying(true);
+                                audio.onended = () => setIsPlaying(false);
+                            }
                         }}
                         className="absolute top-2 right-2 z-10 w-10 h-10 p-2 hover:opacity-70 transition-opacity"
                     >

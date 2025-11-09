@@ -343,11 +343,11 @@ ${chatHistory}
         let ttsScript = `Here's your trip plan to ${destination}, optimized for your $${budget_usd} budget. `;
         
         if (flightInfo) {
-            ttsScript += `You'll be flying with ${flightInfo.airline} for approximately ${flightInfo.price} ${flightInfo.currency}. `;
+            ttsScript += `You'll be flying with ${flightInfo.airline}.`;
         }
         
         if (hotelInfo) {
-            ttsScript += `You'll be staying at ${hotelInfo.name} in ${hotelInfo.city}. `;
+            ttsScript += `You'll be staying at ${hotelInfo.name}. `;
         }
         
         if (activities && activities.length > 0) {
@@ -369,7 +369,7 @@ ${chatHistory}
         
         ttsScript += `Have a wonderful trip!`;
         
-        const ttsRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB", {
+        const ttsRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/c6SfcYrb2t09NHXiT80T", {
             method: "POST",
             headers: {
                 "xi-api-key": elevenKey,
