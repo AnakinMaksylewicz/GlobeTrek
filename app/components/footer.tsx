@@ -1,7 +1,7 @@
 
 export default function footer() {
     return (
-        <div className="w-full bg-[#1e2124] text-gray-300 px-8 py-12">
+        <div className="w-full bg-black text-gray-300 px-8 py-12">
             <div className="grid grid-cols-4 gap-8">
                 <div>
                     <h3 className="text-white font-semibold mb-3">GlobeTrek</h3>
