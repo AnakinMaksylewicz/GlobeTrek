@@ -120,27 +120,91 @@ ${chatHistory}
 
         if (!destCode) {
         const fallbackMap: Record<string, string> = {
-            tokyo: "TYO", osaka: "OSA", kyoto: "UKY",
-            london: "LON", paris: "PAR", rome: "ROM",
-            madrid: "MAD", barcelona: "BCN", berlin: "BER",
-            amsterdam: "AMS", brussels: "BRU", zurich: "ZRH",
-            vienna: "VIE", prague: "PRG", budapest: "BUD",
-            dubai: "DXB", singapore: "SIN", hongkong: "HKG",
-            bangkok: "BKK", seoul: "SEL", beijing: "BJS",
-            shanghai: "SHA", sydney: "SYD", melbourne: "MEL",
-            auckland: "AKL", toronto: "YTO", vancouver: "YVR",
-            montreal: "YMQ", newyork: "NYC", losangeles: "LAX",
-            sanfrancisco: "SFO", chicago: "CHI", miami: "MIA",
-            houston: "HOU", dallas: "DFW", orlando: "ORL",
-            lasvegas: "LAS", boston: "BOS", seattle: "SEA",
-            washington: "WAS", atlanta: "ATL", mexico: "MEX",
-            cancun: "CUN", lima: "LIM", buenosaires: "BUE",
-            santiago: "SCL", saoPaulo: "SAO", rio: "RIO",
-            johannesburg: "JNB", cairo: "CAI", nairobi: "NBO",
-            istanbul: "IST", delhi: "DEL", mumbai: "BOM",
-            bangalore: "BLR", kolkata: "CCU", karachi: "KHI",
-            islamabad: "ISB", doha: "DOH", tehran: "THR",
-            jerusalem: "TLV", riyadh: "RUH"
+                // --- North America ---
+                newyork: "NYC", losangeles: "LAX", chicago: "CHI", miami: "MIA", 
+                orlando: "ORL", atlanta: "ATL", dallas: "DFW", houston: "HOU", 
+                boston: "BOS", seattle: "SEA", sanfrancisco: "SFO", denver: "DEN", 
+                lasvegas: "LAS", washington: "WAS", philadelphia: "PHL", phoenix: "PHX", 
+                sanantonio: "SAT", sanjose: "SJC", minneapolis: "MSP", detroit: "DTT",
+                tampa: "TPA", portland: "PDX", charlotte: "CLT", saltlakecity: "SLC",
+                nashville: "BNA", neworleans: "MSY", pittsburgh: "PIT", austin: "AUS",
+                // Canada
+                toronto: "YTO", vancouver: "YVR", montreal: "YMQ", calgary: "YYC",
+                ottawa: "YOW", edmonton: "YEA", quebec: "YQB",
+                // Mexico & Central America
+                mexico: "MEX", cancun: "CUN", guadalajara: "GDL", monterrey: "MTY",
+                panamacity: "PTY", sanjosecr: "SJO", belizecity: "BZE",
+                sanpedrosula: "SAP", guatemala: "GUA", sanjuan: "SJU",
+
+                // --- South America ---
+                lima: "LIM", santiago: "SCL", buenosaires: "BUE", saopaulo: "SAO",
+                riodejaneiro: "RIO", bogota: "BOG", quito: "UIO", montevideo: "MVD",
+                asuncion: "ASU", laPaz: "LPB", santaCruz: "SRZ", caracas: "CCS",
+
+                // --- Europe ---
+                london: "LON", manchester: "MAN", edinburgh: "EDI", dublin: "DUB",
+                paris: "PAR", nice: "NCE", lyon: "LYS", marseille: "MRS",
+                madrid: "MAD", barcelona: "BCN", valencia: "VLC", seville: "SVQ",
+                lisbon: "LIS", porto: "OPO",
+                berlin: "BER", frankfurt: "FRA", munich: "MUC", hamburg: "HAM",
+                amsterdam: "AMS", brussels: "BRU", zurich: "ZRH", geneva: "GVA",
+                vienna: "VIE", prague: "PRG", budapest: "BUD", warsaw: "WAW",
+                krakow: "KRK", copenhagen: "CPH", stockholm: "STO", gothenburg: "GOT",
+                oslo: "OSL", helsinki: "HEL", reykjavik: "REK",
+                athens: "ATH", thessaloniki: "SKG", rome: "ROM", milan: "MIL", venice: "VCE",
+                florence: "FLR", naples: "NAP", dubrovnik: "DBV", zagreb: "ZAG",
+                istanbul: "IST", ankara: "ESB", sofia: "SOF", bucharest: "BUH",
+                belgrade: "BEG", ljubljana: "LJU", riga: "RIX", tallinn: "TLL",
+                vilnius: "VNO",
+
+                // --- Middle East & North Africa ---
+                dubai: "DXB", abuDhabi: "AUH", doha: "DOH", riyadh: "RUH", jeddah: "JED",
+                muscat: "MCT", cairo: "CAI", alexandria: "ALY", casablanca: "CAS",
+                marrakech: "RAK", tunis: "TUN", algiers: "ALG", tehran: "THR",
+                jerusalem: "TLV", amman: "AMM", beirut: "BEY", baghdad: "BGW",
+                kuwaitcity: "KWI", manama: "BAH",
+
+                // --- Sub-Saharan Africa ---
+                nairobi: "NBO", addisababa: "ADD", johannesburg: "JNB", capetown: "CPT",
+                durban: "DUR", lagos: "LOS", accra: "ACC", abuja: "ABV",
+                dakar: "DKR",
+
+                // --- South Asia ---
+                delhi: "DEL", mumbai: "BOM", bangalore: "BLR", hyderabad: "HYD",
+                chennai: "MAA", kolkata: "CCU", jaipur: "JAI", ahmedabad: "AMD",
+                pune: "PNQ", kochi: "COK", kathmandu: "KTM", dhaka: "DAC",
+                islamabad: "ISB", karachi: "KHI", lahore: "LHE", colombo: "CMB",
+                male: "MLE",
+
+                // --- East Asia ---
+                tokyo: "TYO", osaka: "OSA", kyoto: "UKY", sapporo: "SPK", nagoya: "NGO",
+                seoul: "SEL", busan: "PUS", beijing: "BJS", shanghai: "SHA",
+                guangzhou: "CAN", shenzhen: "SZX", chengdu: "CTU", hongkong: "HKG",
+                taipei: "TPE", kaohsiung: "KHH",
+
+                // --- Southeast Asia ---
+                bangkok: "BKK", phuket: "HKT", chiangmai: "CNX", hanoi: "HAN",
+                hochiminh: "SGN", siemreap: "REP", phnompenh: "PNH",
+                singapore: "SIN", kualalumpur: "KUL", jakarta: "JKT", bali: "DPS",
+                manila: "MNL", cebu: "CEB",
+
+                // --- Oceania & Pacific ---
+                sydney: "SYD", melbourne: "MEL", brisbane: "BNE", perth: "PER",
+                adelaide: "ADL", auckland: "AKL", wellington: "WLG", christchurch: "CHC",
+                nadi: "NAN", honolulu: "HNL", suva: "SUV",
+
+                // --- Eastern Europe & Central Asia ---
+                moscow: "MOW", stpetersburg: "LED", tbilisi: "TBS", yerevan: "EVN",
+                baku: "BAK", tashkent: "TAS", almaty: "ALA", astana: "NQZ",
+
+                // --- East Africa & Indian Ocean ---
+                mauritius: "MRU", seychelles: "SEZ", zanzibar: "ZNZ",
+                kigali: "KGL", kampala: "EBB",
+
+                // --- Caribbean ---
+                kingston: "KIN", montegoBay: "MBJ", havana: "HAV", nassau: "NAS",
+                portofspain: "POS", barbados: "BGI", santoDomingo: "SDQ",
+                aruba: "AUA", curaçao: "CUR", stlucia: "SLU", grenada: "GND",
         };
         destCode = fallbackMap[destination.replace(/\s+/g, "").toLowerCase()] || "";
         console.log("Using fallback IATA code:", destCode);
