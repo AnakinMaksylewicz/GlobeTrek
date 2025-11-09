@@ -14,9 +14,7 @@ export default function Home() {
         {/* Left area*/}
         <div className = "w-3/8 h-full p-2 bg-[#1e2124]">
         {/* Chat box w/ input */}
-          <div className = "flex flex-col w-full gap-1 h-full p-2 bg-black rounded-lg justify-between">
-            <ChatPanel />
-          </div>
+          <ChatPanel />
         </div>
         {/* Right globe box */}
         <div className = "w-5/8 h-full bg-gray-500">
