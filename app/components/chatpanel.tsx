@@ -6,7 +6,7 @@ type Message = {
     content: string;
 }
 
-export default function chatpanel(){
+export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: any[]) => void }){
 
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
@@ -45,7 +45,7 @@ export default function chatpanel(){
             
             if (data.hotel) {
                 const h = data.hotel;
-                assistantMessage.content += `\n\nHotel:\n${h.name || "Unnamed Hotel"}\n${h.address || ""}`;
+                assistantMessage.content += `\n\n**Hotel:\n${h.name || "Unnamed Hotel"}\n${h.address || ""}`;
             }
 
             if (data.activities && Array.isArray(data.activities) && data.activities.length > 0) {
@@ -60,6 +60,14 @@ export default function chatpanel(){
             }
 
             setMessages((prev) => [...prev, assistantMessage]);
+            if (data.hotel && data.activities) {
+                const seq = [
+                    { name: data.hotel.name, lat: data.hotel.lat, lon: data.hotel.lon },
+                    ...data.activities.map((a: any) => ({ name: a.name, lat: a.lat, lon: a.lon }))
+                ];
+                setFlySequence(seq);
+            }
+
         }
         catch (error) {
             console.error("Error sending message:", error);

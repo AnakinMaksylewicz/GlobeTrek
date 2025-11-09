@@ -1,9 +1,12 @@
+"use client";
+import {useState} from "react";
 import Globe from "./components/globe";
 import Dashboard from "./components/dashboard";
 import Footer from "./components/footer";
 import ChatPanel from "./components/chatpanel";
 
 export default function Home() {
+  const [flySequence, setFlySequence] = useState<any[]>([]);
 
   return (
     //Entire page
@@ -14,11 +17,11 @@ export default function Home() {
         {/* Left area*/}
         <div className = "w-3/8 h-full p-2 bg-[#1e2124]">
         {/* Chat box w/ input */}
-          <ChatPanel />
+          <ChatPanel setFlySequence={setFlySequence}/>
         </div>
         {/* Right globe box */}
         <div className = "w-5/8 h-full bg-gray-500">
-          <Globe />
+          <Globe flySequence = {flySequence}/>
         </div>
       </div>
       {/* Separator line */}
