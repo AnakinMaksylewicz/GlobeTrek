@@ -63,31 +63,47 @@ export default function Globe({flySequence = []}: {flySequence?: FlyLocation[]})
   }, []);
 
   useEffect(() => {
-  if (!viewerRef.current || flySequence.length === 0) return;
+    if (!viewerRef.current || flySequence.length === 0) return;
 
-  import("cesium").then((Cesium) => {
-    const viewer = viewerRef.current;
+    import("cesium").then(async (Cesium) => {
+      const viewer = viewerRef.current;
+      const terrainProvider = viewer.terrainProvider;
+      viewer.entities.removeAll();
 
-    viewer.entities.removeAll();
+      for (let i = 0; i < flySequence.length; i++) {
+        const loc = flySequence[i];
+        setTimeout(async () => {
+          const cartographic = Cesium.Cartographic.fromDegrees(loc.lon, loc.lat);
+          const [result] = await Cesium.sampleTerrainMostDetailed(terrainProvider, [cartographic]);
+          const groundHeight = result?.height || 0;
 
-    flySequence.forEach((loc, index) => {
-      setTimeout(() => {
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat, 300),
-          duration: 4,
-        });
+          const cameraHeight = groundHeight + 500;
+          const markerHeight = groundHeight + 50;
 
-        viewer.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat),
-          point: { pixelSize: 10, color: Cesium.Color.RED },
-          name: loc.name,
-        });
-      }, index * 5000);
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat, cameraHeight),
+            duration: 3,
+          });
+
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat, markerHeight),
+            point: { pixelSize: 10, color: Cesium.Color.RED },
+            label: {
+              text: `${i + 1}`,
+              font: "20px sans-serif",
+              fillColor: Cesium.Color.WHITE,
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              verticalOrigin: Cesium.VerticalOrigin.CENTER,
+              pixelOffset: new Cesium.Cartesian2(15, 0),
+            },
+            name: loc.name,
+          });
+        }, i * 5000);
+      }
     });
-  });
-}, [flySequence]);
-
-
+  }, [flySequence]);
 
   return <div ref={globeContainerRef} className="w-full h-full" />;
 }

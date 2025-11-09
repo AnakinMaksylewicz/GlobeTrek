@@ -272,7 +272,17 @@ ${chatHistory}
 
     const placesData = await placesRes.json();
 
-    const activities = placesData.features.map((feature: any) => ({
+    let featuresArr = Array.isArray(placesData?.features) ? placesData.features : [];
+    if (featuresArr.length === 0) {
+        console.warn("No places found with preferred categories, falling back to tourism.attraction");
+        const fallbackRes = await fetch(`https://api.geoapify.com/v2/places?categories=tourism.attraction&filter=circle:${lon},${lat},${radius}&limit=5&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+        const fallbackData = await fallbackRes.json();
+        if(Array.isArray(fallbackData?.features)) {
+            featuresArr = fallbackData.features;
+        }
+    }
+
+    const activities = featuresArr.map((feature: any) => ({
         name: feature.properties.name,
         address: feature.properties.address_line1 || feature.properties.address_line2 || "",
         description: feature.properties.wikipedia_extracts?.text || feature.properties.formatted || feature.properties.details || "No description available.",
