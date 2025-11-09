@@ -89,7 +89,7 @@ export default function Globe({flySequence = []}: {flySequence?: FlyLocation[]})
             position: Cesium.Cartesian3.fromDegrees(loc.lon, loc.lat, markerHeight),
             point: { pixelSize: 10, color: Cesium.Color.RED },
             label: {
-              text: `${i + 1}`,
+              text: i === 0 ? "Hotel" : `${i}`,
               font: "20px sans-serif",
               fillColor: Cesium.Color.WHITE,
               outlineColor: Cesium.Color.BLACK,

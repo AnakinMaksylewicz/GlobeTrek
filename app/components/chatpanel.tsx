@@ -12,6 +12,7 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const chatContainerRef = useRef<HTMLDivElement | null>(null);
+    const [audioSrc, setAudioSrc] = useState<string | null>(null);
 
     async function handleSend(){
         if(!input.trim() || isLoading) return;
@@ -42,7 +43,6 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
                 assistantMessage.content += `\n\nFlight Info:\n${f.airline || "Unknown Airline"} — ${f.departure || "?"} → ${f.arrival || "?"}`;
             }
 
-            
             if (data.hotel) {
                 const h = data.hotel;
                 assistantMessage.content += `\n\n**Hotel:\n${h.name || "Unnamed Hotel"}\n${h.address || ""}`;
@@ -68,6 +68,10 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
                 setFlySequence(seq);
             }
 
+            if(data.audio){
+                setAudioSrc(data.audio);
+            }
+
         }
         catch (error) {
             console.error("Error sending message:", error);
@@ -85,14 +89,26 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
             top: element.scrollHeight,
             behavior: "smooth"  
         });
-    }, [messages]);
+    }, [messages, isLoading]);
 
     return (
         <div className = "flex flex-col w-full gap-1 h-full p-2 bg-black rounded-lg justify-between">
             {/* Chat area */}
-            <div 
-            ref = {chatContainerRef}
-            className = "flex-1 p-3 overflow-y-auto custom-scrollbar bg-linear-to-b rounded-xl from-[#1e2124] to-[#243848]">
+            <div className="relative flex-1 overflow-hidden">
+                {audioSrc && (
+                    <button
+                        onClick={() => {
+                            const audio = new Audio(audioSrc);
+                            audio.play();
+                        }}
+                        className="absolute top-2 right-2 z-10 w-10 h-10 p-2 hover:opacity-70 transition-opacity"
+                    >
+                        <img src="/images/speaker.svg" className="w-full h-full pointer-events-none" alt="Play audio" />
+                    </button>
+                )}
+                <div 
+                ref = {chatContainerRef}
+                className = "h-full p-3 overflow-y-auto custom-scrollbar bg-linear-to-b rounded-xl from-[#1e2124] to-[#243848]">
                 {messages.map((msg, index) => (
                     <div 
                     key={index}
@@ -105,6 +121,17 @@ export default function chatpanel({ setFlySequence }: { setFlySequence: (seq: an
                         {msg.content}
                     </div>
                 ))}
+                {isLoading && (
+                    <div className="my-2 p-2 rounded-lg max-w-[80%] bg-[#70c573] text-white self-start mr-auto">
+                        <span className="inline-flex items-center">
+                            Typing
+                            <span className="animate-pulse ml-1">.</span>
+                            <span className="animate-pulse ml-0.5" style={{animationDelay: '0.2s'}}>.</span>
+                            <span className="animate-pulse ml-0.5" style={{animationDelay: '0.4s'}}>.</span>
+                        </span>
+                    </div>
+                )}
+                </div>
             </div>
             {/* Input area */}
             <div className = "flex items-center bg-gray-800 p-2 rounded-xl">

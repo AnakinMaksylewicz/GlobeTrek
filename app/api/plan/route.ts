@@ -336,6 +336,55 @@ ${chatHistory}
     }
 
 
+    const elevenKey = process.env.ELEVENLABS_API_KEY;
+    let audioUrl = null;
+    if(elevenKey){
+        // Build comprehensive TTS script
+        let ttsScript = `Here's your trip plan to ${destination}, optimized for your $${budget_usd} budget. `;
+        
+        if (flightInfo) {
+            ttsScript += `You'll be flying with ${flightInfo.airline} for approximately ${flightInfo.price} ${flightInfo.currency}. `;
+        }
+        
+        if (hotelInfo) {
+            ttsScript += `You'll be staying at ${hotelInfo.name} in ${hotelInfo.city}. `;
+        }
+        
+        if (activities && activities.length > 0) {
+            ttsScript += `For activities, `;
+            activities.slice(0, 5).forEach((activity: any, index: number) => {
+                if (index === 0) {
+                    ttsScript += `you can visit ${activity.name}`;
+                } else if (index === activities.slice(0, 5).length - 1) {
+                    ttsScript += `, and ${activity.name}`;
+                } else {
+                    ttsScript += `, ${activity.name}`;
+                }
+                if (activity.description) {
+                    ttsScript += `, ${activity.description}`;
+                }
+            });
+            ttsScript += `. `;
+        }
+        
+        ttsScript += `Have a wonderful trip!`;
+        
+        const ttsRes = await fetch("https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB", {
+            method: "POST",
+            headers: {
+                "xi-api-key": elevenKey,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                text: ttsScript,
+                voice_settings: { stability: 0.4, similarity_boost: 0.8 }
+            }),
+        });
+        const arrayBuffer = await ttsRes.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        audioUrl = `data:audio/mpeg;base64,${base64}`;
+    }
+
     return NextResponse.json({
         reply: `Here's your trip plan to ${destination}, optimized for your $${budget_usd} budget!`,
         flight: flightInfo,
@@ -344,5 +393,6 @@ ${chatHistory}
         mapCenter: hotelInfo
             ? { lat: hotelInfo.lat, lon: hotelInfo.lon }
             : { lat, lon },
+        audio: audioUrl,
         });
 }
